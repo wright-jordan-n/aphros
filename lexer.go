@@ -1,5 +1,7 @@
 package lexer
 
+import "fmt"
+
 type TokenTag int
 
 const (
@@ -129,6 +131,10 @@ func advance(state *LexerState) byte {
 
 func newTok(state *LexerState, tag TokenTag) *Token {
 	return &Token{tag, state.col_start, state.line, state.buf[state.start:state.i]}
+}
+
+func errorTok(state *LexerState, msg string) *Token {
+	return &Token{TOK_ERROR, state.col_start, state.line, []byte(msg)}
 }
 
 func Lex(buf []byte) []*Token {
@@ -299,13 +305,24 @@ func Lex(buf []byte) []*Token {
 		case ';':
 			c = advance(state)
 			tokens = append(tokens, newTok(state, TOK_SEMI))
+		case '\'':
+			// TODO
+			c = advance((state))
+			if c >= ' ' || c <= '~' {
+				if c == '\\' {
+
+				}
+				if c == '\'' {
+
+				}
+			}
 		case '0':
 			c = advance(state)
 			if c == '.' {
 				c = advance(state)
 				if c < '0' || c > '9' {
 					state.ok = false
-					tokens = append(tokens, newTok(state, TOK_ERROR))
+					tokens = append(tokens, errorTok(state, "Sequence `0.` must be proceeded with an integer digit"))
 					break
 				}
 				c = advance(state)
@@ -319,7 +336,7 @@ func Lex(buf []byte) []*Token {
 					}
 					if c < '0' || c > '9' {
 						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
+						tokens = append(tokens, errorTok(state, "Sequence `0.[0-9][0-9]*e(+|-)?` must be proceeded with an integer digit"))
 						break
 					}
 					c = advance(state)
@@ -336,7 +353,7 @@ func Lex(buf []byte) []*Token {
 				c = advance(state)
 				if c < 'A' || c > 'F' {
 					state.ok = false
-					tokens = append(tokens, newTok(state, TOK_ERROR))
+					tokens = append(tokens, errorTok(state, "Sequence `0x` must be proceeded with a hex digit"))
 					break
 				}
 				c = advance(state)
@@ -350,7 +367,7 @@ func Lex(buf []byte) []*Token {
 				c = advance(state)
 				if c != '0' && c != '1' {
 					state.ok = false
-					tokens = append(tokens, newTok(state, TOK_ERROR))
+					tokens = append(tokens, errorTok(state, "Sequence `0b` must be proceeded with a binary digit"))
 					break
 				}
 				c = advance(state)
@@ -364,7 +381,7 @@ func Lex(buf []byte) []*Token {
 				c = advance(state)
 				if c < '0' || c > '7' {
 					state.ok = false
-					tokens = append(tokens, newTok(state, TOK_ERROR))
+					tokens = append(tokens, errorTok(state, "Sequence `0o` must be proceeded with an octal digit"))
 					break
 				}
 				c = advance(state)
@@ -381,7 +398,7 @@ func Lex(buf []byte) []*Token {
 				}
 				if c < '0' || c > '9' {
 					state.ok = false
-					tokens = append(tokens, newTok(state, TOK_ERROR))
+					tokens = append(tokens, errorTok(state, "Sequence `0e(+|-)?` must be proceeded with an integer"))
 					break
 				}
 				c = advance(state)
@@ -402,7 +419,7 @@ func Lex(buf []byte) []*Token {
 					c = advance(state)
 					if c < '0' || c > '9' {
 						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
+						tokens = append(tokens, errorTok(state, "Sequence `[1-9][0-9]*.` must be proceeded with an integer digit"))
 						break
 					}
 					c = advance(state)
@@ -416,7 +433,7 @@ func Lex(buf []byte) []*Token {
 						}
 						if c < '0' || c > '9' {
 							state.ok = false
-							tokens = append(tokens, newTok(state, TOK_ERROR))
+							tokens = append(tokens, errorTok(state, "Sequence [1-9][0-9]*.[0-9][0-9]*e(+|-)? must be proceeded with an integer digit"))
 							break
 						}
 						c = advance(state)
@@ -429,48 +446,6 @@ func Lex(buf []byte) []*Token {
 					tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
 					break
 				}
-				if c == 'x' {
-					c = advance(state)
-					if c < 'A' || c > 'F' {
-						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
-						break
-					}
-					c = advance(state)
-					for c >= 'A' && c <= 'F' {
-						c = advance(state)
-					}
-					tokens = append(tokens, newTok(state, TOK_HEX_LIT))
-					break
-				}
-				if c == 'b' {
-					c = advance(state)
-					if c != '0' && c != '1' {
-						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
-						break
-					}
-					c = advance(state)
-					for c == '0' || c == '1' {
-						c = advance(state)
-					}
-					tokens = append(tokens, newTok(state, TOK_BIN_LIT))
-					break
-				}
-				if c == 'o' {
-					c = advance(state)
-					if c < '0' || c > '7' {
-						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
-						break
-					}
-					c = advance(state)
-					for c >= '0' && c <= '7' {
-						c = advance(state)
-					}
-					tokens = append(tokens, newTok(state, TOK_OCT_LIT))
-					break
-				}
 				if c == 'e' {
 					c = advance(state)
 					if c == '+' || c == '-' {
@@ -478,7 +453,7 @@ func Lex(buf []byte) []*Token {
 					}
 					if c < '0' || c > '9' {
 						state.ok = false
-						tokens = append(tokens, newTok(state, TOK_ERROR))
+						tokens = append(tokens, errorTok(state, "Sequence [1-9][0-9]*e(+|-)? must be proceeded with an integer digit"))
 						break
 					}
 					c = advance(state)
@@ -491,9 +466,9 @@ func Lex(buf []byte) []*Token {
 				tokens = append(tokens, newTok(state, TOK_INT_LIT))
 				break
 			}
-			c = advance(state)
 			state.ok = false
-			tokens = append(tokens, &Token{TOK_ERROR, state.col, state.line, state.buf[state.start:state.i]})
+			tokens = append(tokens, errorTok(state, fmt.Sprintf("Invalid source code character %c", c)))
+			c = advance(state)
 		}
 	}
 }
