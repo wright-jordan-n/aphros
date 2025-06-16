@@ -1,0 +1,63 @@
+Syntactical Grammar
+
+program ::= file*
+
+file ::= `module` ident `;` (modular_stmt | top_level_statement)* TOKEN_EOF
+
+modular_stmt ::= import_stmt | export_stmt | struct_decl | fn_decl
+top_level_stmt ::= var_decl | assign_stmt | expr_stmt | if_stmt | loop_stmt
+fn_body_stmt ::= var_decl | assign_stmt | expr_stmt | ret_stmt | if_ret_stmt | loop_ret_stmt 
+
+import_stmt ::= `import` STRING_LITERAL as ident `;`
+export_stmt ::= `export` ident `;`
+struct_forward_decl ::= `struct` ident `;`
+struct_decl ::= `struct` ident `(` (ident type `,`)* `)` `;`
+fn_foward_decl ::= `fn` ident `(` (ident type `,`)* `)` `(` (ident type `,`)* `)` `;`
+fn_decl ::= `fn` ident `(` (ident type `,`)* `)` `(` (ident type `,`)* `)` `{` fn_body_stmt* `}`
+
+var_decl ::= `var` ident (type `;` | (`,` ident)* `=` expr `;`)
+assign_stmt ::= (ident (( `.` ident | `[` expr `]` )* | (`,` ident)* ) ) ( `=` | `+=` | `-=` | `*=` | `/=` | `%=` | `&=` | `|=` | `^=` | `<<=` | `>>=` | `>>>=` ) expr `;`
+expr_stmt ::= expr `;`
+
+break_stmt ::= `break` `;`
+continue_stmt ::= `continue` `;`
+
+if_stmt ::= `if` expr `{` top_level_stmt* `}` ( `elif` expr `{` top_level_stmt* `}` )* ( `else` `{` top_level_stmt* `}` )?
+loop_stmt ::= `loop` `{` (top_level_stmt | break_stmt | continue_stmt)* `}`
+
+ret_stmt ::= `ret` `;`
+if_ret_stmt ::= `if` expr `{` fn_body_stmt* `}` ( `elif` expr `{` fn_body_stmt* `}` )* ( `else` `{` fn_body_stmt* `}` )?
+loop_ret_stmt ::= `loop` `{` (fn_body_stmt | break_stmt | continue_stmt)* `}`
+
+***
+
+type ::= (`[` `]`)* ( `int` | `float` | `str` | `bool` | `func` `(`	(type `,`)* `)` `(` (type `,`)* `)` | `any` | ident )
+
+***
+
+expr ::= as
+
+as ::= comparison ( `as` type )?
+
+comparison ::= additive ( ( `==` | `!=` | `<` | `<=` | `>` | `>=` ) additive )*
+
+additive ::= multiplicative ( ( `+` | `-` | `|` | `^` ) multiplicative )*
+
+multiplicative ::= unary ( ( `*` | `/` | `%` | `&` | `<<` | `>>` | `>>>` ) unary )*
+
+unary ::= ( `!` | `-` )? postfix
+
+postfix ::= primary ( `(` (expr`,`)* `)` |  `.` ident | `[` expr `]` )*
+
+primary ::= literal | ident | `(` expr `)`
+	literal ::= int_literal | float_literal | string_literal
+		| array_literal | struct_literal | `true`
+		| `false` | `nil`
+		int_literal ::= INT_LITERAL | HEX_LITERAL
+			| OCT_LITERAL | BIN_LITERAL
+			| CHAR_LITERAL
+		float_literal ::= FLOAT_LITERAL
+		string_literal ::= STRING_LITERAL
+		array_literal ::= type `[` `]` `{` (expr `,`)* `}`
+		struct_literal ::= ident `(` (expr `,`)* `)`
+	ident ::= IDENT

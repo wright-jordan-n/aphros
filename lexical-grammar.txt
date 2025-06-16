@@ -1,0 +1,30 @@
+Lexical Grammar
+
+WHITESPACE ::= [ \t\n\r][ \t\n\r]*
+COMMENT ::= # [^\n]*
+
+printable_character ::= [\x20-\x21\x23-\x26\x28-\x5B\x5D-\x7E]
+character ::= printable_character | `"` | `\n` | `\t` | `\r` | `\\` | `\'` | \\x[0-9A-F]{2}
+string_character ::= printable_character | `'` | `\n` | `\t` | `\r` | `\\` | `\"` | \\x[0-9A-F]{2}
+
+INT_LITERAL ::= (0|[1-9][0-9]*)
+HEX_LITERAL ::= 0x[0-9A-F][0-9A-F]*
+OCT_LITERAL ::= 0o[0-7][0-7]*
+BIN_LITERAL ::= 0b[01][01]*
+CHAR_LITERAL ::= \' character \'
+
+FLOAT_LITERAL ::= (0|[1-9][0-9]*)\.[0-9][0-9]*(e[+-]?(0|[1-9][0-9]*))? |
+	(0|[1-9][0-9]*)e[+-]?(0|[1-9][0-9]*)
+
+STRING_LITERAL ::= \" ( string_character )* \"
+
+IDENT ::= [a-zA-Z_][0-9a-zA-Z_]*
+
+KEYWORD ::= as | any | bool | break | continue | elif | else | export | false | float |
+	fn | if | import | int | loop | module | nil | ret | str | struct | true | var
+
+OPERATOR ::= `>>>=` | `>>>` | `>>=` | `>>` | `>=` | `>` | `<<=` | `<<` | `<=` | `<` |
+	`*=` | `*` | `/=` | `/` | `%=` | `%` | `+=` | `+` | `-=` | `-` |
+	`==` | `=` | `!=` | `!` | `&=` | `&` | `^=` | `^` | `|=` | `|` | `.`
+
+PUNCTUATION ::= `{` | `}` | `(` | `)` | `[` | `]` | `,` | `;`
