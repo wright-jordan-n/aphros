@@ -9,12 +9,16 @@ const (
 	TOK_HEX_LIT
 	TOK_OCT_LIT
 	TOK_BIN_LIT
-	TOK_CHAR_LIT
 	TOK_FLOAT_LIT
+
+	// TODO
+	TOK_CHAR_LIT
 	TOK_STR_LIT
 
+	// TODO
 	TOK_IDENT
 
+	// TODO
 	TOK_KW_AS
 	TOK_KW_ANY
 	TOK_KW_BOOL
@@ -295,7 +299,186 @@ func Lex(buf []byte) []*Token {
 		case ';':
 			c = advance(state)
 			tokens = append(tokens, newTok(state, TOK_SEMI))
+		case '0':
+			c = advance(state)
+			if c == '.' {
+				c = advance(state)
+				if c < '0' || c > '9' {
+					tokens = append(tokens, newTok(state, TOK_ERROR))
+					break
+				}
+				c = advance(state)
+				for c >= '0' && c <= '9' {
+					c = advance(state)
+				}
+				if c == 'e' {
+					c = advance(state)
+					if c == '+' || c == '-' {
+						advance(state)
+					}
+					if c < '0' || c > '9' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c >= '0' && c <= '9' {
+						c = advance(state)
+					}
+					tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+					break
+				}
+				tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+				break
+			}
+			if c == 'x' {
+				c = advance(state)
+				if c < 'A' || c > 'F' {
+					tokens = append(tokens, newTok(state, TOK_ERROR))
+					break
+				}
+				c = advance(state)
+				for c >= 'A' && c <= 'F' {
+					c = advance(state)
+				}
+				tokens = append(tokens, newTok(state, TOK_HEX_LIT))
+				break
+			}
+			if c == 'b' {
+				c = advance(state)
+				if c != '0' && c != '1' {
+					tokens = append(tokens, newTok(state, TOK_ERROR))
+					break
+				}
+				c = advance(state)
+				for c == '0' || c == '1' {
+					c = advance(state)
+				}
+				tokens = append(tokens, newTok(state, TOK_BIN_LIT))
+				break
+			}
+			if c == 'o' {
+				c = advance(state)
+				if c < '0' || c > '7' {
+					tokens = append(tokens, newTok(state, TOK_ERROR))
+					break
+				}
+				c = advance(state)
+				for c >= '0' && c <= '7' {
+					c = advance(state)
+				}
+				tokens = append(tokens, newTok(state, TOK_OCT_LIT))
+				break
+			}
+			if c == 'e' {
+				c = advance(state)
+				if c == '+' || c == '-' {
+					advance(state)
+				}
+				if c < '0' || c > '9' {
+					tokens = append(tokens, newTok(state, TOK_ERROR))
+					break
+				}
+				c = advance(state)
+				for c >= '0' && c <= '9' {
+					c = advance(state)
+				}
+				tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+				break
+			}
+			tokens = append(tokens, newTok(state, TOK_INT_LIT))
 		default:
+			if c >= '1' && c <= '9' {
+				c = advance(state)
+				for c >= '0' && c <= '9' {
+					c = advance((state))
+				}
+				if c == '.' {
+					c = advance(state)
+					if c < '0' || c > '9' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c >= '0' && c <= '9' {
+						c = advance(state)
+					}
+					if c == 'e' {
+						c = advance(state)
+						if c == '+' || c == '-' {
+							advance(state)
+						}
+						if c < '0' || c > '9' {
+							tokens = append(tokens, newTok(state, TOK_ERROR))
+							break
+						}
+						c = advance(state)
+						for c >= '0' && c <= '9' {
+							c = advance(state)
+						}
+						tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+						break
+					}
+					tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+					break
+				}
+				if c == 'x' {
+					c = advance(state)
+					if c < 'A' || c > 'F' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c >= 'A' && c <= 'F' {
+						c = advance(state)
+					}
+					tokens = append(tokens, newTok(state, TOK_HEX_LIT))
+					break
+				}
+				if c == 'b' {
+					c = advance(state)
+					if c != '0' && c != '1' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c == '0' || c == '1' {
+						c = advance(state)
+					}
+					tokens = append(tokens, newTok(state, TOK_BIN_LIT))
+					break
+				}
+				if c == 'o' {
+					c = advance(state)
+					if c < '0' || c > '7' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c >= '0' && c <= '7' {
+						c = advance(state)
+					}
+					tokens = append(tokens, newTok(state, TOK_OCT_LIT))
+					break
+				}
+				if c == 'e' {
+					c = advance(state)
+					if c == '+' || c == '-' {
+						advance(state)
+					}
+					if c < '0' || c > '9' {
+						tokens = append(tokens, newTok(state, TOK_ERROR))
+						break
+					}
+					c = advance(state)
+					for c >= '0' && c <= '9' {
+						c = advance(state)
+					}
+					tokens = append(tokens, newTok(state, TOK_FLOAT_LIT))
+					break
+				}
+				tokens = append(tokens, newTok(state, TOK_INT_LIT))
+				break
+			}
 			c = advance(state)
 			state.ok = false
 			tokens = append(tokens, &Token{TOK_ERROR, state.col, state.line, state.buf[state.start:state.i]})
