@@ -13,14 +13,11 @@ const (
 	TOK_BIN_LIT
 	TOK_FLOAT_LIT
 
-	// TODO
 	TOK_CHAR_LIT
 	TOK_STR_LIT
 
-	// TODO
 	TOK_IDENT
 
-	// TODO
 	TOK_KW_AS
 	TOK_KW_ANY
 	TOK_KW_BOOL
@@ -104,10 +101,10 @@ const (
 )
 
 type Token struct {
-	tag     TokenTag
-	col     int
-	line    int
-	literal []byte
+	Tag     TokenTag
+	Col     int
+	Line    int
+	Literal []byte
 }
 
 type LexerState struct {
@@ -137,6 +134,31 @@ func errorTok(state *LexerState, msg string) *Token {
 	return &Token{TOK_ERROR, state.col_start, state.line, []byte(msg)}
 }
 
+var keywords map[string]TokenTag = map[string]TokenTag{
+	"as":       TOK_KW_AS,
+	"any":      TOK_KW_ANY,
+	"bool":     TOK_KW_BOOL,
+	"break":    TOK_KW_BREAK,
+	"continue": TOK_KW_CONTINUE,
+	"elif":     TOK_KW_ELIF,
+	"else":     TOK_KW_ELSE,
+	"export":   TOK_KW_EXPORT,
+	"false":    TOK_KW_FALSE,
+	"float":    TOK_KW_FLOAT,
+	"fn":       TOK_KW_FN,
+	"if":       TOK_KW_IF,
+	"import":   TOK_KW_IMPORT,
+	"int":      TOK_KW_INT,
+	"loop":     TOK_KW_LOOP,
+	"module":   TOK_KW_MODULE,
+	"nil":      TOK_KW_NIL,
+	"ret":      TOK_KW_RET,
+	"str":      TOK_KW_STR,
+	"struct":   TOK_KW_STRUCT,
+	"true":     TOK_KW_TRUE,
+	"var":      TOK_KW_VAR,
+}
+
 func Lex(buf []byte) []*Token {
 	tokens := []*Token{}
 	state := &LexerState{col: 1, line: 1, ok: true, buf: buf, i: -1}
@@ -148,9 +170,20 @@ func Lex(buf []byte) []*Token {
 		case 0:
 			tokens = append(tokens, &Token{TOK_EOF, state.col_start, state.line, nil})
 			return tokens
+		case '#':
+			c = advance(state)
+			for c != '\n' && c != 0 {
+				c = advance(state)
+			}
+		case ' ':
+			fallthrough
+		case '\r':
+			fallthrough
+		case '\t':
+			c = advance(state)
 		case '\n':
 			state.line += 1
-			state.col = 1
+			state.col = 0
 			c = advance(state)
 		case '>':
 			c = advance(state)
@@ -306,16 +339,110 @@ func Lex(buf []byte) []*Token {
 			c = advance(state)
 			tokens = append(tokens, newTok(state, TOK_SEMI))
 		case '\'':
-			// TODO
 			c = advance((state))
-			if c >= ' ' || c <= '~' {
-				if c == '\\' {
-
+			if c == 0 {
+				state.ok = false
+				tokens = append(tokens, errorTok(state, "Unterminated character literal"))
+				break
+			}
+			if c < ' ' || c > '~' {
+				state.ok = false
+				tokens = append(tokens, errorTok(state, "Invalid character literal"))
+				break
+			}
+			if c == '\'' {
+				state.ok = false
+				tokens = append(tokens, errorTok(state, "Empty character literal"))
+				break
+			}
+			if c == '\\' {
+				c = advance(state)
+				if c != 'n' && c != 't' && c != 'r' && c != '\\' && c != '\'' {
+					if c == 'x' {
+						c = advance(state)
+						if !((c >= 'A' && c <= 'F') || (c >= '0' && c <= '9')) {
+							state.ok = false
+							tokens = append(tokens, errorTok(state, "Invalid hexadecimal escape sequence"))
+							break
+						}
+						c = advance(state)
+						if !((c >= 'A' && c <= 'F') || (c >= '0' && c <= '9')) {
+							state.ok = false
+							tokens = append(tokens, errorTok(state, "Invalid hexadecimal escape sequence"))
+							break
+						}
+					} else {
+						state.ok = false
+						tokens = append(tokens, errorTok(state, "Invalid character escape sequence"))
+						break
+					}
 				}
-				if c == '\'' {
-
+				c = advance(state)
+				if c != '\'' {
+					state.ok = false
+					tokens = append(tokens, errorTok(state, "Unterminated character literal"))
+					break
+				}
+				c = advance(state)
+				tokens = append(tokens, &Token{TOK_CHAR_LIT, state.col_start, state.line, state.buf[state.start+1 : state.i-1]})
+				break
+			}
+			c = advance(state)
+			if c != '\'' {
+				tokens = append(tokens, errorTok(state, "Unterminated character literal"))
+				break
+			}
+			tokens = append(tokens, &Token{TOK_CHAR_LIT, state.col_start, state.line, state.buf[state.start+1 : state.i-1]})
+		case '"':
+			c = advance((state))
+			ok := true
+			for c != '"' {
+				if c == 0 {
+					ok = false
+					state.ok = false
+					tokens = append(tokens, errorTok(state, "Unterminated string literal"))
+					break
+				}
+				if c < ' ' || c > '~' {
+					ok = false
+					state.ok = false
+					tokens = append(tokens, errorTok(state, "Invalid string literal character"))
+					break
+				}
+				c = advance(state)
+				if c == '\\' {
+					c = advance(state)
+					if c != 'n' && c != 't' && c != 'r' && c != '\\' && c != '"' {
+						if c == 'x' {
+							c = advance(state)
+							if !((c >= 'A' && c <= 'F') || (c >= '0' && c <= '9')) {
+								ok = false
+								state.ok = false
+								tokens = append(tokens, errorTok(state, "Invalid hexadecimal escape sequence"))
+								break
+							}
+							c = advance(state)
+							if !((c >= 'A' && c <= 'F') || (c >= '0' && c <= '9')) {
+								ok = false
+								state.ok = false
+								tokens = append(tokens, errorTok(state, "Invalid hexadecimal escape sequence"))
+								break
+							}
+						} else {
+							ok = false
+							state.ok = false
+							tokens = append(tokens, errorTok(state, "Invalid string literal escape sequence"))
+							break
+						}
+					}
+					c = advance(state)
 				}
 			}
+			if !ok {
+				break
+			}
+			c = advance(state)
+			tokens = append(tokens, &Token{TOK_STR_LIT, state.col_start, state.line, state.buf[state.start+1 : state.i-1]})
 		case '0':
 			c = advance(state)
 			if c == '.' {
@@ -351,13 +478,13 @@ func Lex(buf []byte) []*Token {
 			}
 			if c == 'x' {
 				c = advance(state)
-				if c < 'A' || c > 'F' {
+				if !((c >= 'A' && c <= 'F') || (c >= '0' && c <= '9')) {
 					state.ok = false
 					tokens = append(tokens, errorTok(state, "Sequence `0x` must be proceeded with a hex digit"))
 					break
 				}
 				c = advance(state)
-				for c >= 'A' && c <= 'F' {
+				for (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9') {
 					c = advance(state)
 				}
 				tokens = append(tokens, newTok(state, TOK_HEX_LIT))
@@ -465,6 +592,20 @@ func Lex(buf []byte) []*Token {
 				}
 				tokens = append(tokens, newTok(state, TOK_INT_LIT))
 				break
+			}
+			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
+				c = advance(state)
+				for (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9') {
+					c = advance(state)
+				}
+				kw, found := keywords[string(state.buf[state.start:state.i])]
+				if found {
+					tokens = append(tokens, newTok(state, kw))
+					break
+				}
+				tokens = append(tokens, newTok(state, TOK_IDENT))
+				break
+
 			}
 			state.ok = false
 			tokens = append(tokens, errorTok(state, fmt.Sprintf("Invalid source code character %c", c)))
