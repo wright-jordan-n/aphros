@@ -140,7 +140,7 @@ func Lex(buf []byte) []*Token {
 		state.col_start = state.col
 		switch c {
 		case 0:
-			tokens = append(tokens, &Token{TOK_EOF, state.col, state.line, nil})
+			tokens = append(tokens, &Token{TOK_EOF, state.col_start, state.line, nil})
 			return tokens
 		case '\n':
 			state.line += 1
