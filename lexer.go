@@ -304,6 +304,7 @@ func Lex(buf []byte) []*Token {
 			if c == '.' {
 				c = advance(state)
 				if c < '0' || c > '9' {
+					state.ok = false
 					tokens = append(tokens, newTok(state, TOK_ERROR))
 					break
 				}
@@ -317,6 +318,7 @@ func Lex(buf []byte) []*Token {
 						advance(state)
 					}
 					if c < '0' || c > '9' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
@@ -333,6 +335,7 @@ func Lex(buf []byte) []*Token {
 			if c == 'x' {
 				c = advance(state)
 				if c < 'A' || c > 'F' {
+					state.ok = false
 					tokens = append(tokens, newTok(state, TOK_ERROR))
 					break
 				}
@@ -346,6 +349,7 @@ func Lex(buf []byte) []*Token {
 			if c == 'b' {
 				c = advance(state)
 				if c != '0' && c != '1' {
+					state.ok = false
 					tokens = append(tokens, newTok(state, TOK_ERROR))
 					break
 				}
@@ -359,6 +363,7 @@ func Lex(buf []byte) []*Token {
 			if c == 'o' {
 				c = advance(state)
 				if c < '0' || c > '7' {
+					state.ok = false
 					tokens = append(tokens, newTok(state, TOK_ERROR))
 					break
 				}
@@ -375,6 +380,7 @@ func Lex(buf []byte) []*Token {
 					advance(state)
 				}
 				if c < '0' || c > '9' {
+					state.ok = false
 					tokens = append(tokens, newTok(state, TOK_ERROR))
 					break
 				}
@@ -395,6 +401,7 @@ func Lex(buf []byte) []*Token {
 				if c == '.' {
 					c = advance(state)
 					if c < '0' || c > '9' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
@@ -408,6 +415,7 @@ func Lex(buf []byte) []*Token {
 							advance(state)
 						}
 						if c < '0' || c > '9' {
+							state.ok = false
 							tokens = append(tokens, newTok(state, TOK_ERROR))
 							break
 						}
@@ -424,6 +432,7 @@ func Lex(buf []byte) []*Token {
 				if c == 'x' {
 					c = advance(state)
 					if c < 'A' || c > 'F' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
@@ -437,6 +446,7 @@ func Lex(buf []byte) []*Token {
 				if c == 'b' {
 					c = advance(state)
 					if c != '0' && c != '1' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
@@ -450,6 +460,7 @@ func Lex(buf []byte) []*Token {
 				if c == 'o' {
 					c = advance(state)
 					if c < '0' || c > '7' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
@@ -466,6 +477,7 @@ func Lex(buf []byte) []*Token {
 						advance(state)
 					}
 					if c < '0' || c > '9' {
+						state.ok = false
 						tokens = append(tokens, newTok(state, TOK_ERROR))
 						break
 					}
